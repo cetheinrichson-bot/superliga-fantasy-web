@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Superliga Managerliga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1a7a3c;
+  --green-dark: #0f4f26;
+  --green-light: #e8f5ed;
+  --green-mid: #2d9e54;
+  --white: #f8f9f6;
+  --off-white: #f0f2ed;
+  --text: #1a1f18;
+  --text-muted: #6b7568;
+  --border: rgba(26,122,60,0.15);
+  --border-strong: rgba(26,122,60,0.3);
+  --red: #c0392b;
+  --amber: #d4820a;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--off-white);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--green-dark);
+  padding: 0 24px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.25);
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+}
+
+.logo-dot {
+  width: 8px; height: 8px;
+  background: var(--green-mid);
+  border-radius: 50%;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(0.8)}
+}
+
+nav {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+nav button {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 0 16px;
+  height: 100%;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .5px;
+  position: relative;
+}
+
+nav button:hover { color: #fff; }
+
+nav button.active {
+  color: #fff;
+}
+
+nav button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 16px; right: 16px;
+  height: 2px;
+  background: var(--green-mid);
+  border-radius: 2px 2px 0 0;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .2s;
+  margin: auto 0;
+}
+
+.user-chip:hover { background: rgba(255,255,255,0.18); }
+
+.avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--green-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; color: #fff;
+  flex-shrink: 0;
+}
+
+/* ── LAYOUT ── */
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-pad { padding: 20px 24px; }
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 1.5px;
+  color: var(--green-dark);
+}
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 99px;
+  letter-spacing: .3px;
+}
+
+.badge-live { background: #fde8e8; color: var(--red); }
+.badge-done { background: var(--green-light); color: var(--green-dark); }
+.badge-upcoming { background: #fef3e2; color: var(--amber); }
+.badge-ledig { background: var(--off-white); color: var(--text-muted); border: 1px solid var(--border); }
+.badge-locked { background: #fff8e1; color: #8a6000; }
+
+/* ── POSITION BADGES ── */
+.pos {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+}
+.pos-mål { background: #fff3cd; color: #856404; }
+.pos-for { background: #d1e7dd; color: #0a4d2e; }
+.pos-mid { background: #cfe2ff; color: #0a3880; }
+.pos-ang { background: #f8d7da; color: #6e1519; }
+
+/* ── TABLES ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  background: var(--off-white);
+  text-transform: uppercase;
+}
+.tbl td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr { transition: background .15s; }
+.tbl tbody tr:hover td { background: var(--green-light); }
+.tbl tbody tr.me td { background: rgba(26,122,60,0.06); }
+
+.pts-pos { color: var(--green); font-weight: 600; }
+.pts-neg { color: var(--red); font-weight: 600; }
+.pts-neu { font-weight: 600; }
+
+/* ── METRIC GRID ── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.metric {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 1px;
+  color: var(--green-dark);
+  line-height: 1;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── RUNDE CHIPS ── */
+.runde-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.runde-chip {
+  padding: 5px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  border-radius: 99px;
+  background: var(--white);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.runde-chip:hover { border-color: var(--green); color: var(--green); }
+.runde-chip.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+.runde-chip.done { opacity: .55; }
+
+/* ── FORMATION ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.form-btn {
+  padding: 9px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+  text-align: center;
+}
+
+.form-btn:hover { border-color: var(--green); color: var(--green); }
+.form-btn.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+
+/* ── PITCH ── */
+.pitch-wrap {
+  background: var(--green-dark);
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  border-radius: var(--radius);
+  padding: 16px 10px 18px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pitch-wrap::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,.08);
+  transform: translateX(-50%);
+}
+
+.pitch-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.pslot {
+  flex: 1;
+  max-width: 100px;
+  border-radius: 8px;
+  padding: 7px 5px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+}
+
+.pslot.filled {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.25);
+}
+
+.pslot.filled:hover {
+  background: rgba(255,255,255,.2);
+  border-color: rgba(255,255,255,.5);
+  transform: translateY(-1px);
+}
+
+.pslot.locked {
+  background: rgba(0,0,0,.2);
+  border: 1px solid rgba(255,200,0,.3);
+  cursor: not-allowed;
+}
+
+.pslot.empty {
+  background: rgba(0,0,0,.15);
+  border: 1.5px dashed rgba(255,80,80,.4);
+  cursor: pointer;
+}
+
+.pslot .pts { font-size: 10px; color: #6ee892; font-weight: 600; margin-bottom: 1px; }
+.pslot .nm  { font-size: 10px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pslot .cl  { font-size: 9px; color: rgba(255,255,255,.55); }
+.pslot .lk  { font-size: 9px; color: rgba(255,200,0,.8); font-weight: 600; }
+.pslot .ep  { font-size: 9px; color: rgba(255,100,100,.7); font-weight: 600; }
+
+.bench-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin: 14px 0 8px;
+}
+
+.bench-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bench-slot {
+  flex: 1;
+  min-width: 90px;
+  max-width: 130px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.bench-slot:hover { border-color: var(--green); transform: translateY(-1px); box-shadow: var(--shadow); }
+.bench-slot.locked { border-color: #f0c040; opacity: .65; cursor: not-allowed; }
+.bench-slot .b-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.bench-slot .b-club { font-size: 10px; color: var(--text-muted); }
+.bench-slot .b-pts  { font-size: 11px; font-weight: 600; margin-top: 3px; }
+.bench-slot .b-lock { font-size: 9px; color: var(--amber); margin-top: 2px; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover { background: var(--green-light); border-color: var(--green); }
+.btn-primary { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+.btn-primary:hover { background: var(--green); border-color: var(--green); opacity: 1; }
+.btn-danger { color: var(--red); border-color: rgba(192,57,43,0.3); }
+.btn-danger:hover { background: #fde8e8; }
+.btn-success { color: var(--green); border-color: var(--border-strong); }
+.btn-success:hover { background: var(--green-light); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* ── SEARCH ── */
+.search-wrap { position: relative; margin-bottom: 12px; }
+.search-wrap input {
+  width: 100%;
+  padding: 10px 16px 10px 38px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.search-wrap input:focus { border-color: var(--green); }
+.search-icon {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* ── FILTER PILLS ── */
+.filter-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-pill {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  border-radius: 99px;
+  background: var(--white);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+.filter-pill:hover { border-color: var(--green); color: var(--green); }
+.filter-pill.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+
+/* ── TRADE BUILDER ── */
+.trade-sides { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.trade-side {
+  flex: 1;
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.trade-side-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.trade-arrow { font-size: 20px; color: var(--text-muted); margin-top: 36px; flex-shrink: 0; }
+.player-tag {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.player-tag .rm { color: var(--red); cursor: pointer; font-size: 16px; line-height: 1; margin-left: 6px; }
+.add-btn {
+  width: 100%;
+  padding: 7px;
+  font-size: 12px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+.add-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-light); }
+.add-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* ── UNEVEN TRADE WARNING ── */
+.uneven-warn {
+  background: #fff8e1;
+  border: 1px solid #f0c040;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #6b4c00;
+  margin-bottom: 12px;
+  display: none;
+}
+
+/* ── TRANSFER CARD ── */
+.trade-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  background: var(--white);
+  transition: box-shadow .15s;
+}
+.trade-card:hover { box-shadow: var(--shadow); }
+.trade-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.trade-players { display: flex; gap: 16px; }
+.trade-col { flex: 1; }
+.trade-col-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+.trade-col-player { font-size: 13px; font-weight: 500; padding: 2px 0; }
+.release-warn { font-size: 11px; color: var(--red); margin-top: 8px; font-weight: 500; }
+
+/* ── SELECT ── */
+select.inp {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+select.inp:focus { border-color: var(--green); }
+
+/* ── BAR CHART ── */
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 13px; }
+.bar-name { width: 78px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.bar-track { flex: 1; background: var(--off-white); border-radius: 99px; height: 7px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+.bar-val { width: 54px; text-align: right; font-weight: 600; font-size: 12px; }
+
+/* ── MODAL ── */
+.modal-bg {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 22px 24px;
+  width: min(360px, 92vw);
+  max-height: 75vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: modal-in .2s ease;
+}
+@keyframes modal-in {
+  from { opacity:0; transform: scale(.95) translateY(8px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: var(--green-dark); margin-bottom: 4px; }
+.modal .msub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.pick-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.pick-item:last-child { border-bottom: none; }
+.pick-item:hover { opacity: .65; }
+.pick-name { font-size: 13px; font-weight: 600; }
+.pick-detail { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+/* ── LOADING ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: var(--text-muted);
+  font-size: 14px;
+  gap: 10px;
+}
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── NOTIF ── */
+.notif {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.notif-info { background: #e8f5ed; color: var(--green-dark); border: 1px solid rgba(26,122,60,.2); }
+.notif-warn { background: #fff8e1; color: #6b4c00; border: 1px solid #f0c040; }
+
+/* ── ADMIN BADGE ── */
+.admin-pill {
+  display: inline-flex; align-items: center;
+  background: rgba(26,122,60,.12);
+  color: var(--green-dark);
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px;
+  letter-spacing: .5px;
+  margin-left: 8px;
+}
+
+/* ── TABS ── */
+.tab-row { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tab-btn {
+  padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .15s;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--green-dark); border-bottom-color: var(--green); font-weight: 600; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  nav button { padding: 0 10px; font-size: 12px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: repeat(4, 1fr); }
+  .trade-sides { flex-direction: column; }
+  .trade-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Superliga Managerliga
+  </div>
+  <nav id="main-nav">
+    <button class="active" onclick="showPage('stilling',this)">Stilling</button>
+    <button onclick="showPage('hold',this)">Mit hold</button>
+    <button onclick="showPage('spillere',this)">Spillere</button>
+    <button onclick="showPage('transfers',this)">Transfers</button>
+    <button onclick="showPage('admin',this)">Admin <span class="admin-pill">CHR</span></button>
+  </nav>
+  <div class="user-chip" onclick="openModal('modal-user')">
+    <div class="avatar" id="user-avatar">R</div>
+    <span id="user-name">Reitzel</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ════════════════ STILLING ════════════════ -->
+<div id="page-stilling" class="page active">
+  <div class="section-head">
+    <span class="section-title">Ligastilling</span>
+    <span class="badge badge-live" id="active-round-badge">Runde 5 · live</span>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div id="standings-loading" class="loading"><div class="spinner"></div>Henter stilling...</div>
+    <table class="tbl" id="standings-table" style="display:none">
+      <thead><tr>
+        <th style="width:32px">#</th>
+        <th>Manager</th>
+        <th style="text-align:right">Ligapoint</th>
+        <th style="text-align:right">Total vækst</th>
+        <th style="text-align:right">Aktiv runde</th>
+      </tr></thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+  </div>
+  <div class="card card-pad">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px">Sæsonvækst</div>
+    <div id="season-bars"></div>
+  </div>
+</div>
+
+<!-- ════════════════ MIT HOLD ════════════════ -->
+<div id="page-hold" class="page">
+  <div class="section-head">
+    <span class="section-title" id="hold-title">Mit hold</span>
+    <span class="badge badge-upcoming" id="hold-runde-label">Runde 5</span>
+  </div>
+
+  <div class="metrics" id="hold-metrics">
+    <div class="metric"><div class="metric-label">Total vækst</div><div class="metric-value" id="m-total">–</div></div>
+    <div class="metric"><div class="metric-label">Aktiv runde</div><div class="metric-value" id="m-runde">–</div></div>
+    <div class="metric"><div class="metric-label">Placering</div><div class="metric-value" id="m-place">–</div></div>
+  </div>
+
+  <div class="runde-bar" id="runde-bar"></div>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="holdTab('opstilling',this)">Opstilling</button>
+    <button class="tab-btn" onclick="holdTab('trup',this)">Hele truppen</button>
+  </div>
+
+  <!-- Opstilling -->
+  <div id="hold-opstilling">
+    <div class="notif notif-info" id="deadline-note">Klik på en spiller for at bytte. Spillere låses når deres kamp starter.</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Formation</div>
+    <div class="form-grid" id="form-grid"></div>
+    <div id="pos-warn"></div>
+    <div class="pitch-wrap" id="pitch"></div>
+    <div class="bench-label">Bænk</div>
+    <div class="bench-row" id="bench"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button class="btn" onclick="resetLineup()">Nulstil</button>
+      <button class="btn btn-primary" onclick="saveLineup()">Gem opstilling</button>
+    </div>
+  </div>
+
+  <!-- Trup -->
+  <div id="hold-trup" style="display:none">
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Spiller</th><th>Klub</th><th>Pos.</th><th style="text-align:right">Vækst</th><th></th></tr></thead>
+        <tbody id="trup-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ SPILLERE ════════════════ -->
+<div id="page-spillere" class="page">
+  <div class="section-head">
+    <span class="section-title">Spillerdatabase</span>
+    <span class="badge badge-upcoming" id="player-count-badge">Indlæser...</span>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="player-search" placeholder="Søg på navn eller klub..." oninput="renderPlayers()">
+  </div>
+  <div class="filter-row" id="pos-filters">
+    <button class="filter-pill active" onclick="setPosFilter('alle',this)">Alle</button>
+    <button class="filter-pill" onclick="setPosFilter('MÅL',this)">Målmænd</button>
+    <button class="filter-pill" onclick="setPosFilter('FOR',this)">Forsvar</button>
+    <button class="filter-pill" onclick="setPosFilter('MID',this)">Midtbane</button>
+    <button class="filter-pill" onclick="setPosFilter('ANG',this)">Angreb</button>
+    <button class="filter-pill" onclick="setPosFilter('ledig',this)">Ledige</button>
+  </div>
+  <div class="card">
+    <div id="players-loading" class="loading"><div class="spinner"></div>Henter spillere...</div>
+    <table class="tbl" id="players-table" style="display:none">
+      <thead><tr><th>Spiller</th><th>Klub</th><th>Pos.</th><th>Ejer</th><th style="text-align:right">Vækst</th><th></th></tr></thead>
+      <tbody id="players-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════ TRANSFERS ════════════════ -->
+<div id="page-transfers" class="page">
+  <div class="section-head"><span class="section-title">Transfers</span></div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="trTab('anmod',this)">Anmod om trade</button>
+    <button class="tab-btn" onclick="trTab('indgaende',this)">Indgående <span id="incoming-count" style="background:var(--green-light);color:var(--green-dark);font-size:10px;padding:1px 6px;border-radius:99px;margin-left:4px">2</span></button>
+    <button class="tab-btn" onclick="trTab('historik',this)">Historik</button>
+  </div>
+
+  <div id="tr-anmod">
+    <div class="card card-pad">
+      <div style="font-size:13px;font-weight:600;margin-bottom:14px">Byg din trade</div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Send til</div>
+      <select class="inp" id="trade-to" onchange="updateTradeTarget()">
+        <option value="">— Vælg modtager —</option>
+        <option>Thom</option><option>Heine</option>
+        <option>Marl</option><option>Guldmann</option><option>Dan</option>
+      </select>
+      <div class="trade-sides">
+        <div class="trade-side">
+          <div class="trade-side-label">Jeg afgiver</div>
+          <div id="give-list"></div>
+          <button class="add-btn" onclick="openPickModal('give')">+ Tilføj spiller</button>
+        </div>
+        <div class="trade-arrow">⇄</div>
+        <div class="trade-side">
+          <div class="trade-side-label">Jeg modtager</div>
+          <div id="get-list"></div>
+          <button class="add-btn" id="get-add-btn" onclick="openPickModal('get')" disabled>+ Tilføj spiller</button>
+        </div>
+      </div>
+      <div class="uneven-warn" id="uneven-warn">
+        <strong>Ulige trade</strong> – du modtager <span id="uw-get">0</span> og afgiver <span id="uw-give">0</span>.
+        Du skal frigive <span id="uw-drop">0</span> spiller(e) fra din trup:
+        <div id="drop-picks" style="margin-top:8px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+        <span id="trade-sum" style="font-size:12px;color:var(--text-muted)"></span>
+        <button class="btn btn-primary" onclick="sendTrade()">Send anmodning</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tr-indgaende" style="display:none">
+    <div class="trade-card">
+      <div class="trade-card-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar" style="background:#0f4f26">T</div>
+          <strong>Trade fra Thom</strong>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted)">2 timer siden</span>
+      </div>
+      <div class="trade-players">
+        <div class="trade-col">
+          <div class="trade-col-label">Thom afgiver</div>
+          <div class="trade-col-player">E. Rafn Olafsson</div>
+          <div class="trade-col-player">Felix Beijmo</div>
+        </div>
+        <div style="color:var(--text-muted);font-size:18px;margin-top:14px">⇄</div>
+        <div class="trade-col">
+          <div class="trade-col-label">Du afgiver</div>
+          <div class="trade-col-player">Patrick Pentz</div>
+          <div class="trade-col-player">H. Dalsgaard</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button class="btn btn-sm btn-success" onclick="acceptTrade(this)">Acceptér</button>
+        <button class="btn btn-sm btn-danger" onclick="declineTrade(this)">Afvis</button>
+      </div>
+    </div>
+    <div class="trade-card">
+      <div class="trade-card-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar" style="background:#6b1519">D</div>
+          <strong>Trade fra Dan</strong>
+        </div>
+        <span style="font-size:11px;color:var(--text-muted)">I går</span>
+      </div>
+      <div class="trade-players">
+        <div class="trade-col">
+          <div class="trade-col-label">Dan afgiver</div>
+          <div class="trade-col-player">Han-beom Lee</div>
+          <div class="trade-col-player">Nicolas Bürgy</div>
+        </div>
+        <div style="color:var(--text-muted);font-size:18px;margin-top:14px">⇄</div>
+        <div class="trade-col">
+          <div class="trade-col-label">Du afgiver</div>
+          <div class="trade-col-player">Fr. Tingager</div>
+        </div>
+      </div>
+      <div class="release-warn">Du modtager 2 og afgiver 1 – vælg en spiller at frigive:</div>
+      <select class="inp" style="margin-top:8px;font-size:12px">
+        <option>— Vælg spiller at frigive —</option>
+      </select>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-sm btn-success" onclick="acceptTrade(this)">Acceptér</button>
+        <button class="btn btn-sm btn-danger" onclick="declineTrade(this)">Afvis</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tr-historik" style="display:none">
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Runde</th><th>Parter</th><th>Spillere</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>R4</td><td>Dan ↔ Heine</td><td style="font-size:11px">N. Bürgy + D. Kotarski ↔ P. Ankersen</td><td><span class="badge badge-done">Gennemført</span></td></tr>
+          <tr><td>R3</td><td>Ledig → Marl</td><td style="font-size:11px">Ben Godfrey (fri)</td><td><span class="badge badge-done">Gennemført</span></td></tr>
+          <tr><td>R2</td><td>Reitzel ↔ Thom</td><td style="font-size:11px">C. Storch ↔ Henrik D.</td><td><span class="badge badge-locked">Afvist</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ ADMIN ════════════════ -->
+<div id="page-admin" class="page">
+  <div class="section-head">
+    <span class="section-title">Admin <span class="admin-pill">Kun CHR</span></span>
+  </div>
+  <div class="notif notif-warn">Her kan du som admin tildele/flytte spillere og administrere runder.</div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="adminTab('tildel',this)">Tildel spillere</button>
+    <button class="tab-btn" onclick="adminTab('runder',this)">Runder</button>
+  </div>
+  <div id="admin-tildel">
+    <div class="card">
+      <div id="admin-loading" class="loading"><div class="spinner"></div>Henter spillere...</div>
+      <table class="tbl" id="admin-table" style="display:none">
+        <thead><tr><th>Spiller</th><th>Pos.</th><th>Nuværende ejer</th><th>Ny ejer</th><th></th></tr></thead>
+        <tbody id="admin-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="admin-runder" style="display:none">
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Runde</th><th>Start</th><th>Slut</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rounds-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ════════ MODALS ════════ -->
+<div id="modal-swap" class="modal-bg">
+  <div class="modal">
+    <h3 id="swap-title">Vælg spiller</h3>
+    <div class="msub" id="swap-sub"></div>
+    <div id="swap-list"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-swap')">Annullér</button></div>
+  </div>
+</div>
+
+<div id="modal-user" class="modal-bg">
+  <div class="modal">
+    <h3>Skift bruger</h3>
+    <div class="msub">Vælg din manager-profil</div>
+    <div id="user-list"></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal('modal-user')">Luk</button></div>
+  </div>
+</div>
+
+<!-- ════════ FIREBASE + APP SCRIPT ════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-database.js";
+
+// ── FIREBASE CONFIG ──
+// Erstat disse værdier med din egen Firebase config
+// (Firebase Console → Project settings → Your apps → SDK setup)
+const firebaseConfig = {
+  apiKey: "AIzaSyBJRX5sV-sin2wu1_FC2I25eqwcBnT6RHs",
+  authDomain: "superliga-fantasy-14c4e.firebaseapp.com",
+  databaseURL: "https://superliga-fantasy-14c4e-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "superliga-fantasy-14c4e",
+  storageBucket: "superliga-fantasy-14c4e.firebasestorage.app",
+  messagingSenderId: "952252233248",
+  appId: "1:952252233248:web:319133c0e90a6edce92e45"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ── STATE ── 
+let allPlayers = {};
+let allManagers = {};
+let allRounds = {};
+let currentUser = 'Reitzel';
+let posFilter = 'alle';
+let currentFormation = '4-3-3';
+let lineup = { MÅL: [], FOR: [], MID: [], ANG: [] };
+let tradeGive = [], tradeGet = [], tradeDrop = [];
+let swapMode = null;
+
+const formations = {
+  '4-3-3':[4,3,3],'4-4-2':[4,4,2],'4-5-1':[4,5,1],
+  '3-4-3':[3,4,3],'3-5-2':[3,5,2],'5-4-1':[5,4,1],'5-3-2':[5,3,2]
+};
+const posOrder = ['ANG','MID','FOR','MÅL'];
+const posLabel = { MÅL:'Målmand', FOR:'Forsvarsspiller', MID:'Midtbanespiller', ANG:'Angriber' };
+const posClass = { MÅL:'pos-mål', FOR:'pos-for', MID:'pos-mid', ANG:'pos-ang' };
+const managerColors = { Reitzel:'#3C3489', Thom:'#085041', Heine:'#0C447C', Marl:'#633806', Guldmann:'#27500A', Dan:'#4A1B0C' };
+
+// ── LOAD DATA ──
+async function loadAll() {
+  const [pSnap, mSnap, rSnap] = await Promise.all([
+    get(ref(db, 'players')),
+    get(ref(db, 'managers')),
+    get(ref(db, 'rounds'))
+  ]);
+  allPlayers = pSnap.val() || {};
+  allManagers = mSnap.val() || {};
+  allRounds = rSnap.val() || {};
+
+  buildDefaultLineup();
+  renderStandings();
+  renderBars();
+  renderPlayers();
+  renderRundebar();
+  renderPitch();
+  renderBench();
+  renderTrup();
+  renderAdminTable();
+  renderRoundsAdmin();
+  renderUserModal();
+}
+
+// ── HELPERS ──
+function mySquad() {
+  return Object.values(allPlayers).filter(p => p.owner === currentUser);
+}
+
+function getStarters() {
+  return Object.values(lineup).flat().filter(Boolean);
+}
+
+function getBench() {
+  const s = new Set(getStarters());
+  return mySquad().filter(p => !s.has(p.fullName));
+}
+
+function fmtGrowth(n) {
+  if (!n) return '0';
+  return (n > 0 ? '+' : '') + (n/1000).toFixed(0) + 'k';
+}
+
+function activeRound() {
+  return Object.entries(allRounds).find(([,r]) => r.status === 'active')?.[0] || 'r5';
+}
+
+function calcTotal(player) {
+  if (!player.roundGrowth) return 0;
+  return Object.values(player.roundGrowth).reduce((a,b) => a + (b||0), 0);
+}
+
+function managerTotal(manager) {
+  return Object.values(allPlayers)
+    .filter(p => p.owner === manager)
+    .reduce((sum, p) => sum + calcTotal(p), 0);
+}
+
+function managerRoundScore(manager, rnd) {
+  return Object.values(allPlayers)
+    .filter(p => p.owner === manager)
+    .reduce((sum, p) => sum + (p.roundGrowth?.[rnd] || 0), 0);
+}
+
+// ── STANDINGS ──
+function renderStandings() {
+  document.getElementById('standings-loading').style.display = 'none';
+  const tbl = document.getElementById('standings-table');
+  tbl.style.display = 'table';
+  const rnd = activeRound();
+  const managers = Object.keys(allManagers).filter(m => !allManagers[m].isAdmin);
+  const ranked = managers.map(m => ({
+    name: m,
+    total: managerTotal(m),
+    runde: managerRoundScore(m, rnd)
+  })).sort((a,b) => b.total - a.total);
+
+  // Liga-point: rank pr runde for alle runder
+  const ligaPoints = {};
+  managers.forEach(m => ligaPoints[m] = 0);
+  Object.keys(allRounds).forEach(rk => {
+    if (allRounds[rk].status === 'upcoming') return;
+    const scores = managers.map(m => ({ m, s: managerRoundScore(m, rk) }))
+      .sort((a,b) => b.s - a.s);
+    scores.forEach(({m}, i) => { ligaPoints[m] += (managers.length - i); });
+  });
+
+  const body = document.getElementById('standings-body');
+  body.innerHTML = ranked.map((r, i) => `
+    <tr class="${r.name === currentUser ? 'me' : ''}">
+      <td style="font-weight:700;color:var(--text-muted)">${i+1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar" style="background:${managerColors[r.name]||'#333'}">${r.name[0]}</div>
+          <span style="font-weight:${r.name===currentUser?'600':'400'}">${r.name}</span>
+        </div>
+      </td>
+      <td class="pts-neu" style="text-align:right">${ligaPoints[r.name]}</td>
+      <td class="${r.total>=0?'pts-pos':'pts-neg'}" style="text-align:right">${fmtGrowth(r.total)}</td>
+      <td class="${r.runde>=0?'pts-pos':'pts-neg'}" style="text-align:right">${fmtGrowth(r.runde)}</td>
+    </tr>`).join('');
+
+  // Opdater badge
+  const ar = allRounds[rnd];
+  if (ar) document.getElementById('active-round-badge').textContent = ar.label + ' · live';
+}
+
+function renderBars() {
+  const managers = Object.keys(allManagers).filter(m => !allManagers[m].isAdmin);
+  const totals = managers.map(m => ({ m, t: managerTotal(m) })).sort((a,b) => b.t - a.t);
+  const max = Math.max(...totals.map(x => Math.abs(x.t)), 1);
+  const colors = ['#1a7a3c','#2d9e54','#57c97a','#8adba0','#b5ecc4','#d9f5e2'];
+  document.getElementById('season-bars').innerHTML = totals.map(({m,t},i) => `
+    <div class="bar-row">
+      <div class="bar-name">${m}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(Math.abs(t)/max*100)}%;background:${colors[i]}"></div></div>
+      <div class="bar-val ${t>=0?'pts-pos':'pts-neg'}">${fmtGrowth(t)}</div>
+    </div>`).join('');
+}
+
+// ── HOLD ──
+function buildDefaultLineup() {
+  const squad = mySquad();
+  const byPos = { MÅL:[], FOR:[], MID:[], ANG:[] };
+  squad.forEach(p => { if(byPos[p.position]) byPos[p.position].push(p.fullName); });
+  const [def,mid,att] = formations[currentFormation];
+  lineup = {
+    MÅL: byPos.MÅL.slice(0,1),
+    FOR: byPos.FOR.slice(0,def),
+    MID: byPos.MID.slice(0,mid),
+    ANG: byPos.ANG.slice(0,att),
+  };
+  // Pad med null
+  const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  Object.keys(counts).forEach(pos => {
+    while(lineup[pos].length < counts[pos]) lineup[pos].push(null);
+  });
+}
+
+function renderHoldMetrics() {
+  const rnd = activeRound();
+  const squad = mySquad();
+  const total = squad.reduce((s,p) => s+calcTotal(p), 0);
+  const runde = squad.reduce((s,p) => s+(p.roundGrowth?.[rnd]||0), 0);
+  const managers = Object.keys(allManagers).filter(m=>!allManagers[m].isAdmin);
+  const rank = managers.map(m=>managerTotal(m)).sort((a,b)=>b-a).indexOf(total)+1;
+  document.getElementById('m-total').textContent = fmtGrowth(total);
+  document.getElementById('m-runde').textContent = fmtGrowth(runde);
+  document.getElementById('m-place').textContent = rank + '/' + managers.length;
+  document.getElementById('hold-title').textContent = (allManagers[currentUser]?.teamName || currentUser + "'s hold");
+  document.getElementById('hold-runde-label').textContent = allRounds[rnd]?.label || 'Runde ?';
+}
+
+function renderRundebar() {
+  const rnd = activeRound();
+  document.getElementById('runde-bar').innerHTML = Object.entries(allRounds).map(([k,r]) => `
+    <button class="runde-chip ${k===rnd?'active':''} ${r.status==='done'?'done':''}"
+      onclick="selectRunde('${k}',this)">${r.label.replace('Runde ','R')}${k===rnd?' ●':''}</button>`
+  ).join('');
+}
+
+function selectRunde(key, btn) {
+  document.querySelectorAll('.runde-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('hold-runde-label').textContent = allRounds[key]?.label || key;
+}
+
+function renderFormGrid() {
+  document.getElementById('form-grid').innerHTML = Object.keys(formations).map(f => `
+    <button class="form-btn ${f===currentFormation?'active':''}" onclick="setFormation('${f}')">${f}</button>`
+  ).join('');
+}
+
+function renderPitch() {
+  renderFormGrid();
+  const [def,mid,att] = formations[currentFormation];
+  const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  let html = `<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-bottom:10px">${currentFormation}</div>`;
+  posOrder.forEach(pos => {
+    const need = counts[pos]||1;
+    const slots = lineup[pos]||[];
+    let row = '';
+    for(let i=0;i<need;i++) {
+      const name = slots[i];
+      const p = name ? allPlayers[name] : null;
+      if(p) {
+        const rnd = activeRound();
+        const rpts = p.roundGrowth?.[rnd] || 0;
+        row += `<div class="pslot filled" onclick="openSwap('${pos}',${i})">
+          <div class="pts">${fmtGrowth(rpts)}</div>
+          <div class="nm">${p.fullName.split(' ').pop()}</div>
+          <div class="cl">${p.club}</div>
+        </div>`;
+      } else {
+        row += `<div class="pslot empty" onclick="openSwap('${pos}',${i})">
+          <div class="ep">Mangler</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.35)">${posLabel[pos]}</div>
+        </div>`;
+      }
+    }
+    html += `<div class="pitch-row">${row}</div>`;
+  });
+  document.getElementById('pitch').innerHTML = html;
+  renderBench();
+  checkPosWarnings();
+}
+
+function checkPosWarnings() {
+  const [def,mid,att] = formations[currentFormation];
+  const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  const missing = Object.entries(counts).filter(([pos,n]) =>
+    (lineup[pos]||[]).filter(Boolean).length < n
+  ).map(([pos,n]) => `${n-(lineup[pos]||[]).filter(Boolean).length} ${posLabel[pos].toLowerCase()}`);
+  document.getElementById('pos-warn').innerHTML = missing.length
+    ? `<div class="notif notif-warn">Mangler: ${missing.join(' · ')}</div>` : '';
+}
+
+function renderBench() {
+  const bench = getBench();
+  document.getElementById('bench').innerHTML = bench.slice(0,5).map(p => `
+    <div class="bench-slot" onclick="openSwapFromBench('${p.fullName}')">
+      <div class="b-name">${p.fullName.split(' ').pop()}</div>
+      <div class="b-club">${p.club}</div>
+      <div style="margin:3px 0"><span class="pos ${posClass[p.position]}">${p.position}</span></div>
+      <div class="b-pts ${calcTotal(p)>=0?'pts-pos':'pts-neg'}">${fmtGrowth(calcTotal(p))}</div>
+    </div>`).join('');
+}
+
+function renderTrup() {
+  const squad = mySquad().sort((a,b) => calcTotal(b)-calcTotal(a));
+  document.getElementById('trup-body').innerHTML = squad.map(p => `
+    <tr>
+      <td style="font-weight:600">${p.fullName}</td>
+      <td style="color:var(--text-muted)">${p.club}</td>
+      <td><span class="pos ${posClass[p.position]}">${p.position}</span></td>
+      <td class="${calcTotal(p)>=0?'pts-pos':'pts-neg'}" style="text-align:right">${fmtGrowth(calcTotal(p))}</td>
+      <td style="text-align:right"><button class="btn btn-sm btn-danger" onclick="releasePlayer('${p.fullName}')">Frigiv</button></td>
+    </tr>`).join('');
+}
+
+// ── SWAP MODAL ──
+function openSwap(pos, idx) {
+  swapMode = { type:'slot', pos, idx };
+  const current = (lineup[pos]||[])[idx];
+  const starters = new Set(getStarters());
+  const options = getBench().filter(p => p.position === pos);
+  document.getElementById('swap-title').textContent = current ? 'Byt ud: ' + current.split(' ').pop() : 'Vælg ' + posLabel[pos].toLowerCase();
+  document.getElementById('swap-sub').textContent = 'Kun ' + posLabel[pos].toLowerCase() + 'e kan placeres her';
+  document.getElementById('swap-list').innerHTML = options.length
+    ? options.map(p => `
+        <div class="pick-item" onclick="doSwap('${p.fullName}')">
+          <div>
+            <div class="pick-name">${p.fullName}</div>
+            <div class="pick-detail">${p.club}</div>
+          </div>
+          <span class="${calcTotal(p)>=0?'pts-pos':'pts-neg'}">${fmtGrowth(calcTotal(p))}</span>
+        </div>`).join('')
+    : '<div style="color:var(--text-muted);font-size:13px;padding:10px 0">Ingen tilgængelige spillere på bænken i denne position.</div>';
+  openModal('modal-swap');
+}
+
+function openSwapFromBench(name) {
+  const p = allPlayers[name];
+  const pos = p.position;
+  const [def,mid,att] = formations[currentFormation];
+  const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  const slots = lineup[pos]||[];
+  for(let i=0;i<(counts[pos]||1);i++) {
+    if(!slots[i]) { lineup[pos][i]=name; renderPitch(); return; }
+  }
+  // Alle slots fyldte – spørg hvem der skal ud
+  swapMode = { type:'bench', incoming: name, pos };
+  document.getElementById('swap-title').textContent = 'Hvem skal ud for ' + name.split(' ').pop() + '?';
+  document.getElementById('swap-sub').textContent = 'Vælg hvem der rykker på bænk';
+  const starters = (lineup[pos]||[]).filter(Boolean);
+  document.getElementById('swap-list').innerHTML = starters.map(n => {
+    const s = allPlayers[n];
+    return `<div class="pick-item" onclick="doSwapOut('${n}','${name}','${pos}')">
+      <div><div class="pick-name">${n}</div><div class="pick-detail">${s?.club||''}</div></div>
+      <span class="${calcTotal(s)>=0?'pts-pos':'pts-neg'}">${fmtGrowth(calcTotal(s))}</span>
+    </div>`;
+  }).join('');
+  openModal('modal-swap');
+}
+
+function doSwap(name) {
+  if(!swapMode) return;
+  const {pos,idx} = swapMode;
+  lineup[pos][idx] = name;
+  closeModal('modal-swap');
+  renderPitch();
+}
+
+function doSwapOut(out, incoming, pos) {
+  const idx = lineup[pos].indexOf(out);
+  if(idx>=0) lineup[pos][idx] = incoming;
+  closeModal('modal-swap');
+  renderPitch();
+}
+
+// ── SPILLERE ──
+function renderPlayers() {
+  document.getElementById('players-loading').style.display = 'none';
+  const tbl = document.getElementById('players-table');
+  tbl.style.display = 'table';
+  const q = document.getElementById('player-search').value.toLowerCase();
+  const players = Object.values(allPlayers).filter(p => {
+    const matchQ = !q || p.fullName.toLowerCase().includes(q) || p.club?.toLowerCase().includes(q);
+    const matchPos = posFilter==='alle' ? true : posFilter==='ledig' ? p.owner==='Ledig' : p.position===posFilter;
+    return matchQ && matchPos;
+  }).sort((a,b) => calcTotal(b)-calcTotal(a));
+
+  document.getElementById('player-count-badge').textContent = players.length + ' spillere';
+
+  document.getElementById('players-body').innerHTML = players.map(p => {
+    const isMe = p.owner === currentUser;
+    const isLedig = p.owner === 'Ledig' || !p.owner;
+    const total = calcTotal(p);
+    let actionBtn = '';
+    if(isLedig) actionBtn = `<button class="btn btn-sm btn-success" onclick="pickupPlayer('${p.fullName}')">Hent</button>`;
+    else if(isMe) actionBtn = `<button class="btn btn-sm btn-danger" onclick="releasePlayer('${p.fullName}')">Frigiv</button>`;
+    else actionBtn = `<button class="btn btn-sm" onclick="startTrade('${p.fullName}','${p.owner}')">Trade</button>`;
+
+    return `<tr>
+      <td style="font-weight:600">${p.fullName}</td>
+      <td style="color:var(--text-muted)">${p.club||'–'}</td>
+      <td><span class="pos ${posClass[p.position]}">${p.position||'–'}</span></td>
+      <td>${isLedig
+        ? '<span class="badge badge-ledig">Ledig</span>'
+        : `<div style="display:flex;align-items:center;gap:6px"><div class="avatar" style="width:20px;height:20px;font-size:9px;background:${managerColors[p.owner]||'#666'}">${p.owner?.[0]}</div>${p.owner}</div>`
+      }</td>
+      <td class="${total>=0?'pts-pos':'pts-neg'}" style="text-align:right">${fmtGrowth(total)}</td>
+      <td style="text-align:right">${actionBtn}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── ADMIN ──
+function renderAdminTable() {
+  document.getElementById('admin-loading').style.display = 'none';
+  document.getElementById('admin-table').style.display = 'table';
+  const players = Object.values(allPlayers).slice(0,50);
+  const managers = Object.keys(allManagers).filter(m=>!allManagers[m].isAdmin);
+  document.getElementById('admin-body').innerHTML = players.map(p => `
+    <tr>
+      <td style="font-weight:600">${p.fullName}</td>
+      <td><span class="pos ${posClass[p.position]}">${p.position}</span></td>
+      <td>${p.owner==='Ledig'||!p.owner ? '<span class="badge badge-ledig">Ledig</span>' : p.owner}</td>
+      <td>
+        <select class="inp" style="margin:0;padding:4px 8px;font-size:12px;width:110px">
+          <option ${!p.owner||p.owner==='Ledig'?'selected':''}>Ledig</option>
+          ${managers.map(m=>`<option ${p.owner===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="btn btn-sm btn-primary" onclick="adminSave(this,'${p.fullName}')">Gem</button></td>
+    </tr>`).join('');
+}
+
+function renderRoundsAdmin() {
+  document.getElementById('rounds-body').innerHTML = Object.entries(allRounds).map(([k,r]) => `
+    <tr>
+      <td style="font-weight:600">${r.label}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${new Date(r.start).toLocaleDateString('da-DK')}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${new Date(r.end).toLocaleDateString('da-DK')}</td>
+      <td><span class="badge badge-${r.status==='active'?'live':r.status==='done'?'done':'upcoming'}">${r.status}</span></td>
+      <td>
+        <select class="inp" style="margin:0;padding:4px 8px;font-size:12px;width:110px" onchange="updateRoundStatus('${k}',this.value)">
+          <option ${r.status==='done'?'selected':''}>done</option>
+          <option ${r.status==='active'?'selected':''}>active</option>
+          <option ${r.status==='upcoming'?'selected':''}>upcoming</option>
+        </select>
+      </td>
+    </tr>`).join('');
+}
+
+// ── TRADE BUILDER ──
+function updateTradeTarget() {
+  tradeGet = [];
+  renderTradeLists();
+  const btn = document.getElementById('get-add-btn');
+  const m = document.getElementById('trade-to').value;
+  btn.disabled = !m;
+}
+
+function openPickModal(mode) {
+  swapMode = { type: 'trade', mode };
+  const manager = document.getElementById('trade-to').value;
+  document.getElementById('swap-title').textContent = mode==='give' ? 'Jeg afgiver' : 'Jeg modtager';
+  document.getElementById('swap-sub').textContent = mode==='give' ? 'Vælg fra din trup' : 'Vælg fra ' + manager + "'s trup";
+  const opts = mode==='give'
+    ? mySquad().filter(p=>!tradeGive.includes(p.fullName))
+    : Object.values(allPlayers).filter(p=>p.owner===manager && !tradeGet.includes(p.fullName));
+  document.getElementById('swap-list').innerHTML = opts.map(p => `
+    <div class="pick-item" onclick="addToTrade('${p.fullName}','${mode}')">
+      <div><div class="pick-name">${p.fullName}</div><div class="pick-detail">${p.club} · ${p.position}</div></div>
+      <span class="${calcTotal(p)>=0?'pts-pos':'pts-neg'}">${fmtGrowth(calcTotal(p))}</span>
+    </div>`).join('') || '<div style="color:var(--text-muted);padding:10px 0;font-size:13px">Ingen spillere tilgængelige</div>';
+  openModal('modal-swap');
+}
+
+function addToTrade(name, mode) {
+  if(mode==='give' && !tradeGive.includes(name)) tradeGive.push(name);
+  if(mode==='get' && !tradeGet.includes(name)) tradeGet.push(name);
+  closeModal('modal-swap');
+  renderTradeLists();
+  checkUnevenTrade();
+}
+
+function renderTradeLists() {
+  document.getElementById('give-list').innerHTML = tradeGive.map(n=>`
+    <div class="player-tag"><span>${n}</span><span class="rm" onclick="removeFromTrade('${n}','give')">×</span></div>`).join('');
+  document.getElementById('get-list').innerHTML = tradeGet.map(n=>`
+    <div class="player-tag"><span>${n}</span><span class="rm" onclick="removeFromTrade('${n}','get')">×</span></div>`).join('');
+  const g=tradeGive.length, r=tradeGet.length;
+  document.getElementById('trade-sum').textContent = (g||r) ? `${g} ud · ${r} ind` : '';
+}
+
+function removeFromTrade(name, mode) {
+  if(mode==='give') tradeGive = tradeGive.filter(n=>n!==name);
+  if(mode==='get') tradeGet = tradeGet.filter(n=>n!==name);
+  renderTradeLists();
+  checkUnevenTrade();
+}
+
+function checkUnevenTrade() {
+  const diff = tradeGet.length - tradeGive.length;
+  const warn = document.getElementById('uneven-warn');
+  if(diff > 0) {
+    warn.style.display = 'block';
+    document.getElementById('uw-give').textContent = tradeGive.length;
+    document.getElementById('uw-get').textContent = tradeGet.length;
+    document.getElementById('uw-drop').textContent = diff;
+    const eligible = mySquad().filter(p=>!tradeGive.includes(p.fullName));
+    document.getElementById('drop-picks').innerHTML = eligible.slice(0,8).map(p=>`
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0;cursor:pointer">
+        <input type="checkbox" onchange="toggleDrop('${p.fullName}',this)"> ${p.fullName}
+      </label>`).join('');
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
+function toggleDrop(name, cb) {
+  if(cb.checked) tradeDrop.push(name);
+  else tradeDrop = tradeDrop.filter(n=>n!==name);
+}
+
+// ── USER MODAL ──
+function renderUserModal() {
+  const managers = Object.keys(allManagers).filter(m=>!allManagers[m].isAdmin);
+  document.getElementById('user-list').innerHTML = managers.map(m=>`
+    <div class="pick-item" onclick="setUser('${m}')">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar" style="background:${managerColors[m]||'#333'}">${m[0]}</div>
+        <div>
+          <div class="pick-name">${m}</div>
+          <div class="pick-detail">${allManagers[m]?.teamName||''}</div>
+        </div>
+      </div>
+      ${m===currentUser?'<span class="badge badge-done">Aktiv</span>':''}
+    </div>`).join('');
+}
+
+// ── FIREBASE ACTIONS ──
+async function pickupPlayer(name) {
+  if(!confirm('Hent ' + name + ' til din trup?')) return;
+  await update(ref(db, 'players/' + name), { owner: currentUser });
+  allPlayers[name].owner = currentUser;
+  renderPlayers(); renderTrup(); renderStandings();
+}
+
+async function releasePlayer(name) {
+  if(!confirm('Frigiv ' + name + '? Spilleren bliver ledig for alle.')) return;
+  await update(ref(db, 'players/' + name), { owner: 'Ledig' });
+  allPlayers[name].owner = 'Ledig';
+  renderPlayers(); renderTrup(); renderPitch(); renderStandings();
+}
+
+async function adminSave(btn, name) {
+  const select = btn.closest('tr').querySelector('select');
+  const newOwner = select.value;
+  await update(ref(db, 'players/' + name), { owner: newOwner });
+  allPlayers[name].owner = newOwner;
+  alert('Gemt!');
+}
+
+async function updateRoundStatus(key, status) {
+  await update(ref(db, 'rounds/' + key), { status });
+  allRounds[key].status = status;
+}
+
+async function saveLineup() {
+  const rnd = activeRound();
+  const starters = getStarters();
+  await update(ref(db, 'managers/' + currentUser + '/lineup/' + rnd), {
+    formation: currentFormation,
+    starters: starters
+  });
+  alert('Opstilling gemt til ' + (allRounds[rnd]?.label||rnd) + '!');
+}
+
+// ── UI ACTIONS ──
+window.showPage = function(page, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  btn.classList.add('active');
+  if(page==='hold') { renderHoldMetrics(); renderPitch(); renderTrup(); }
+};
+
+window.holdTab = function(t, btn) {
+  document.getElementById('hold-opstilling').style.display = t==='opstilling'?'block':'none';
+  document.getElementById('hold-trup').style.display = t==='trup'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+window.trTab = function(t, btn) {
+  ['anmod','indgaende','historik'].forEach(id=>document.getElementById('tr-'+id).style.display='none');
+  document.getElementById('tr-'+t).style.display='block';
+  document.querySelectorAll('#page-transfers .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+window.adminTab = function(t, btn) {
+  ['tildel','runder'].forEach(id=>document.getElementById('admin-'+id).style.display='none');
+  document.getElementById('admin-'+t).style.display='block';
+  document.querySelectorAll('#page-admin .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+window.setFormation = function(f) {
+  currentFormation = f;
+  const [def,mid,att] = formations[f];
+  const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  Object.keys(counts).forEach(pos => {
+    const need = counts[pos];
+    if(!lineup[pos]) lineup[pos]=[];
+    while(lineup[pos].length < need) {
+      const bench = getBench().find(p=>p.position===pos);
+      lineup[pos].push(bench?.fullName||null);
+    }
+    lineup[pos] = lineup[pos].slice(0, need);
+  });
+  renderPitch();
+};
+
+window.resetLineup = function() { buildDefaultLineup(); renderPitch(); };
+window.selectRunde = selectRunde;
+window.setPosFilter = function(f, btn) {
+  posFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlayers();
+};
+
+window.openSwap = openSwap;
+window.openSwapFromBench = openSwapFromBench;
+window.doSwap = doSwap;
+window.doSwapOut = doSwapOut;
+window.openPickModal = openPickModal;
+window.addToTrade = addToTrade;
+window.removeFromTrade = removeFromTrade;
+window.toggleDrop = toggleDrop;
+window.updateTradeTarget = updateTradeTarget;
+window.pickupPlayer = pickupPlayer;
+window.releasePlayer = releasePlayer;
+window.adminSave = adminSave;
+window.updateRoundStatus = updateRoundStatus;
+window.saveLineup = saveLineup;
+window.renderPlayers = renderPlayers;
+
+window.sendTrade = function() {
+  if(!tradeGive.length||!tradeGet.length) { alert('Tilføj mindst én spiller på begge sider.'); return; }
+  const diff = tradeGet.length - tradeGive.length;
+  if(diff>0 && tradeDrop.length<diff) { alert('Vælg '+diff+' spiller(e) at frigive.'); return; }
+  alert('Trade sendt til ' + (document.getElementById('trade-to').value||'modtager') + '!');
+  tradeGive=[]; tradeGet=[]; tradeDrop=[];
+  renderTradeLists();
+};
+
+window.acceptTrade = function(btn) { btn.closest('.trade-card').style.opacity='.4'; alert('Trade accepteret!'); };
+window.declineTrade = function(btn) { btn.closest('.trade-card').style.opacity='.4'; alert('Trade afvist.'); };
+
+window.startTrade = function(name, owner) {
+  showPage('transfers', document.querySelector('nav button:nth-child(4)'));
+  document.getElementById('trade-to').value = owner;
+  updateTradeTarget();
+  addToTrade(name, 'get');
+};
+
+window.setUser = function(name) {
+  currentUser = name;
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-avatar').textContent = name[0];
+  document.getElementById('user-avatar').style.background = managerColors[name]||'#333';
+  closeModal('modal-user');
+  buildDefaultLineup();
+  renderStandings();
+  renderBars();
+  renderPlayers();
+  renderHoldMetrics();
+  renderPitch();
+  renderTrup();
+  renderUserModal();
+};
+
+window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
+});
+
+// ── START ──
+loadAll();
+</script>
+</body>
+</html>
