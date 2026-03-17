@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -697,7 +698,7 @@ select.inp:focus { border-color: var(--green); }
     <button onclick="showPage('hold',this)">Mit hold</button>
     <button onclick="showPage('spillere',this)">Spillere</button>
     <button onclick="showPage('transfers',this)">Transfers</button>
-    <button onclick="showPage('admin',this)">Admin <span class="admin-pill">CHR</span></button>
+    <button onclick="checkAdminPin(this)">Admin <span class="admin-pill">CHR</span></button>
   </nav>
   <div class="user-chip" onclick="openModal('modal-user')">
     <div class="avatar" id="user-avatar">R</div>
@@ -1166,7 +1167,10 @@ function renderHoldMetrics() {
 
 function renderRundebar() {
   const rnd = activeRound();
-  document.getElementById('runde-bar').innerHTML = Object.entries(allRounds).map(([k,r]) => `
+  const sorted = Object.entries(allRounds).sort((a,b) => {
+    return parseInt(a[0].replace('r','')) - parseInt(b[0].replace('r',''));
+  });
+  document.getElementById('runde-bar').innerHTML = sorted.map(([k,r]) => `
     <button class="runde-chip ${k===rnd?'active':''} ${r.status==='done'?'done':''}"
       onclick="selectRunde('${k}',this)">${r.label.replace('Runde ','R')}${k===rnd?' ●':''}</button>`
   ).join('');
@@ -1370,7 +1374,9 @@ function renderAdminTable() {
 }
 
 function renderRoundsAdmin() {
-  document.getElementById('rounds-body').innerHTML = Object.entries(allRounds).map(([k,r]) => `
+  const sorted = Object.entries(allRounds).sort((a,b) =>
+    parseInt(a[0].replace('r','')) - parseInt(b[0].replace('r','')));
+  document.getElementById('rounds-body').innerHTML = sorted.map(([k,r]) => `
     <tr>
       <td style="font-weight:600">${r.label}</td>
       <td style="font-size:12px;color:var(--text-muted)">${new Date(r.start).toLocaleDateString('da-DK')}</td>
@@ -1592,8 +1598,21 @@ window.sendTrade = function() {
   renderTradeLists();
 };
 
-window.acceptTrade = function(btn) { btn.closest('.trade-card').style.opacity='.4'; alert('Trade accepteret!'); };
-window.declineTrade = function(btn) { btn.closest('.trade-card').style.opacity='.4'; alert('Trade afvist.'); };
+window.acceptTrade = function(btn) {
+  const card = btn.closest('.trade-card');
+  card.style.display = 'none';
+  // Tæl resterende indgående trades
+  const remaining = document.querySelectorAll('#tr-indgaende .trade-card:not([style*="display: none"])').length;
+  document.getElementById('incoming-count').textContent = remaining;
+  alert('Trade accepteret og gennemført!');
+};
+window.declineTrade = function(btn) {
+  const card = btn.closest('.trade-card');
+  card.style.display = 'none';
+  const remaining = document.querySelectorAll('#tr-indgaende .trade-card:not([style*="display: none"])').length;
+  document.getElementById('incoming-count').textContent = remaining;
+  alert('Trade afvist.');
+};
 
 window.startTrade = function(name, owner) {
   showPage('transfers', document.querySelector('nav button:nth-child(4)'));
@@ -1624,6 +1643,25 @@ window.closeModal = function(id) { document.getElementById(id).classList.remove(
 document.querySelectorAll('.modal-bg').forEach(bg => {
   bg.addEventListener('click', e => { if(e.target===bg) bg.classList.remove('open'); });
 });
+
+// ── ADMIN PIN ──
+const ADMIN_PIN = '2905'; // Skift dette til din ønskede PIN-kode
+let adminUnlocked = false;
+
+window.checkAdminPin = function(btn) {
+  if (adminUnlocked) {
+    showPage('admin', btn);
+    return;
+  }
+  const input = prompt('Indtast admin PIN-kode:');
+  if (input === null) return; // Annulleret
+  if (input === ADMIN_PIN) {
+    adminUnlocked = true;
+    showPage('admin', btn);
+  } else {
+    alert('Forkert PIN-kode.');
+  }
+};
 
 // ── START ──
 loadAll();
