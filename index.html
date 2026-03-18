@@ -1145,16 +1145,36 @@ function calcTotal(player) {
   return Object.values(player.roundGrowth).reduce((a,b) => a + (b||0), 0);
 }
 
-function managerTotal(manager) {
-  return Object.values(allPlayers)
-    .filter(p => p.owner === manager)
-    .reduce((sum, p) => sum + calcTotal(p), 0);
-}
+// managerTotal er nu defineret i managerRoundScore-blokken ovenfor
 
 function managerRoundScore(manager, rnd) {
+  // Brug gemt snapshot hvis det findes (låst score fra opstillingen den runde)
+  const snapshot = allManagers[manager]?.roundScores?.[rnd];
+  if (snapshot !== undefined) return snapshot;
+  // Fallback: beregn fra nuværende trup (bruges for aktiv runde)
   return Object.values(allPlayers)
     .filter(p => p.owner === manager)
     .reduce((sum, p) => sum + (p.roundGrowth?.[rnd] || 0), 0);
+}
+
+function managerTotal(manager) {
+  // Brug snapshots for afsluttede runder, live data for aktiv runde
+  const rnd = activeRound();
+  const roundScores = allManagers[manager]?.roundScores || {};
+  let total = 0;
+  for (const [key, round] of Object.entries(allRounds)) {
+    if (round.status === 'upcoming') continue;
+    if (key === rnd) {
+      // Aktiv runde: brug live data
+      total += Object.values(allPlayers)
+        .filter(p => p.owner === manager)
+        .reduce((sum, p) => sum + (p.roundGrowth?.[key] || 0), 0);
+    } else {
+      // Afsluttet runde: brug snapshot hvis det findes
+      total += roundScores[key] || 0;
+    }
+  }
+  return total;
 }
 
 // ── STANDINGS ──
