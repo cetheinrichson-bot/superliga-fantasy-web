@@ -1399,6 +1399,7 @@ function renderPitchForRunde(rnd) {
 
   if (isHistoric && starters.length > 0) {
     // Historisk runde – vis gemt opstilling, ikke redigerbar
+    currentFormation = formation; // Sæt korrekt formation så den vises markeret
     const [def,mid,att] = (formations[formation] || formations['4-3-3']);
     const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
     let html = `<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-bottom:10px">${formation} · ${allRounds[rnd]?.label}</div>`;
@@ -1436,7 +1437,25 @@ function renderPitchForRunde(rnd) {
     return;
   }
 
-  // Aktiv runde – vis redigerbar opstilling
+  // Aktiv eller fremtidig runde – vis redigerbar opstilling
+  // Sæt formation fra gemt opstilling hvis den findes
+  if (savedLineup?.formation && formations[savedLineup.formation]) {
+    currentFormation = savedLineup.formation;
+  }
+  // Sæt lineup fra gemt opstilling hvis den findes
+  if (starters.length > 0) {
+    const [def,mid,att] = formations[currentFormation] || formations['4-3-3'];
+    const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+    const byPos = { MÅL:[], FOR:[], MID:[], ANG:[] };
+    starters.forEach(name => {
+      const p = allPlayers[name] || allPlayers[name.replace(/[.#$\/\[\]]/g,'_')];
+      if(p && byPos[p.position]) byPos[p.position].push(name);
+    });
+    Object.keys(counts).forEach(pos => {
+      lineup[pos] = byPos[pos].slice(0, counts[pos]);
+      while(lineup[pos].length < counts[pos]) lineup[pos].push(null);
+    });
+  }
   document.querySelector('#hold-opstilling .btn-primary').style.display = 'inline-block';
   document.querySelector('#hold-opstilling .btn:not(.btn-primary)').style.display = 'inline-block';
   // Opdater deadline-note
