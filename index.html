@@ -1505,7 +1505,6 @@ function openSwap(pos, idx) {
     return;
   }
   swapMode = { type:'slot', pos, idx };
-  const current = (lineup[pos]||[])[idx];
   const starters = new Set(getStarters());
   const options = getBench().filter(p => p.position === pos);
   document.getElementById('swap-title').textContent = current ? 'Byt ud: ' + current.split(' ').pop() : 'Vælg ' + posLabel[pos].toLowerCase();
@@ -1981,7 +1980,7 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 });
 
 // ── ADMIN PIN ──
-const ADMIN_PIN = '1234'; // Skift dette til din ønskede PIN-kode
+const ADMIN_PIN = '2905'; // Skift dette til din ønskede PIN-kode
 let adminUnlocked = false;
 
 window.checkAdminPin = function(btn) {
