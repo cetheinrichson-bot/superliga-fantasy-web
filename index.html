@@ -1183,8 +1183,6 @@ function renderStandings() {
     ligaPts: ligaPoints[m] || 0
   })).sort((a,b) => b.ligaPts - a.ligaPts || b.total - a.total);
 
-  })).sort((a,b) => b.ligaPts - a.ligaPts || b.total - a.total);
-
   const body = document.getElementById('standings-body');
   body.innerHTML = ranked.map((r, i) => `
     <tr class="${r.name === currentUser ? 'me' : ''}">
