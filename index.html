@@ -324,7 +324,6 @@ main {
   border-radius: var(--radius);
   padding: 16px 10px 18px;
   margin-bottom: 14px;
-
   position: relative;
   overflow: hidden;
 }
@@ -651,7 +650,6 @@ select.inp:focus { border-color: var(--green); }
 /* ── ADMIN BADGE ── */
 .admin-pill {
   display: inline-flex; align-items: center;
-
   background: rgba(26,122,60,.12);
   color: var(--green-dark);
   font-size: 10px; font-weight: 700;
@@ -1304,7 +1302,6 @@ if (name && isPlayerLocked(name, rnd)) lockedCounts[pos]++;
 });
 });
 }
-
 document.getElementById('form-grid').innerHTML = Object.keys(formations).map(f => {
 const [def,mid,att] = formations[f];
 const needed = { MÅL:1, FOR:def, MID:mid, ANG:att };
@@ -1319,7 +1316,7 @@ let cls = 'form-btn';
 if (isActive) cls += ' active';
 if (disabled) cls += ' disabled';
 const style = disabled ? 'opacity:.35;cursor:not-allowed;' : '';
-const onclick = (!disabled) ? ' onclick="window.setFormation(' + JSON.stringify(f) + ')"' : '';
+const onclick = (!disabled) ? ' onclick="window.setFormation(\'' + f + '\')"' : '';
 return '<button class="' + cls + '" style="' + style + '"' + onclick + '>' + f + '</button>';
 }).join('');
 }
@@ -1631,7 +1628,6 @@ const btn = document.getElementById('get-add-btn');
 const m = document.getElementById('trade-to').value;
 btn.disabled = !m;
 }
-
 function openPickModal(mode) {
 swapMode = { type: 'trade', mode };
 const manager = document.getElementById('trade-to').value;
@@ -1953,4 +1949,3 @@ loadAll();
 </script>
 </body>
 </html>
-
