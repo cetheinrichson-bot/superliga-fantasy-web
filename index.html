@@ -1164,6 +1164,18 @@ function renderStandings() {
   tbl.style.display = 'table';
   const rnd = activeRound();
   const managers = Object.keys(allManagers).filter(m => !allManagers[m].isAdmin);
+
+  // Beregn ligapoint FOERST
+  const ligaPoints = {};
+  managers.forEach(m => ligaPoints[m] = 0);
+  Object.keys(allRounds).sort((a,b) => parseInt(a.replace('r',''))-parseInt(b.replace('r',''))).forEach(rk => {
+    if (allRounds[rk].status === 'upcoming') return;
+    const scores = managers.map(m => ({ m, s: managerRoundScore(m, rk) }))
+      .sort((a,b) => b.s - a.s);
+    scores.forEach(({m}, i) => { ligaPoints[m] += (managers.length - i); });
+  });
+
+  // Derefter sorter efter ligapoint
   const ranked = managers.map(m => ({
     name: m,
     total: managerTotal(m),
@@ -1171,15 +1183,7 @@ function renderStandings() {
     ligaPts: ligaPoints[m] || 0
   })).sort((a,b) => b.ligaPts - a.ligaPts || b.total - a.total);
 
-  // Liga-point: rank pr runde for alle runder
-  const ligaPoints = {};
-  managers.forEach(m => ligaPoints[m] = 0);
-  Object.keys(allRounds).forEach(rk => {
-    if (allRounds[rk].status === 'upcoming') return;
-    const scores = managers.map(m => ({ m, s: managerRoundScore(m, rk) }))
-      .sort((a,b) => b.s - a.s);
-    scores.forEach(({m}, i) => { ligaPoints[m] += (managers.length - i); });
-  });
+  })).sort((a,b) => b.ligaPts - a.ligaPts || b.total - a.total);
 
   const body = document.getElementById('standings-body');
   body.innerHTML = ranked.map((r, i) => `
