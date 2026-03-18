@@ -313,6 +313,7 @@ main {
 
 .form-btn:hover { border-color: var(--green); color: var(--green); }
 .form-btn.active { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+.form-btn.disabled { opacity: .35; cursor: not-allowed; }
 
 /* ── PITCH ── */
 .pitch-wrap {
@@ -1324,9 +1325,46 @@ function selectRunde(key, btn) {
 }
 
 function renderFormGrid() {
-  document.getElementById('form-grid').innerHTML = Object.keys(formations).map(f => `
-    <button class="form-btn ${f===currentFormation?'active':''}" onclick="setFormation('${f}')">${f}</button>`
-  ).join('');
+  const rnd = getDisplayRunde();
+  const roundLocked = isRoundLocked(rnd);
+
+  // Tæl låste spillere pr position i den aktive opstilling
+  const lockedCounts = { MÅL:0, FOR:0, MID:0, ANG:0 };
+  if (!roundLocked) {
+    Object.entries(lineup).forEach(([pos, slots]) => {
+      (slots||[]).forEach(name => {
+        if (name && isPlayerLocked(name, rnd)) lockedCounts[pos]++;
+      });
+    });
+  }
+
+  document.getElementById('form-grid').innerHTML = Object.keys(formations).map(f => {
+    const [def,mid,att] = formations[f];
+    const needed = { MÅL:1, FOR:def, MID:mid, ANG:att };
+
+    // Formation er ugyldig hvis den kræver færre spillere end dem der allerede er låst
+    const invalid = !roundLocked && (
+      needed.FOR < lockedCounts.FOR ||
+      needed.MID < lockedCounts.MID ||
+      needed.ANG < lockedCounts.ANG
+    );
+
+    const disabled = roundLocked || invalid;
+    const title = roundLocked
+      ? 'Runden er afsluttet'
+      : invalid
+        ? `Kan ikke vælge – ${Object.entries(lockedCounts).filter(([p,n])=>n>0&&needed[p]<n).map(([p,n])=>`${n} ${p.toLowerCase()} låst`).join(', ')}`
+        : '';
+
+    return `<button
+      class="form-btn ${f===currentFormation?'active':''} ${disabled?'disabled':''}"
+      onclick="${disabled?'void(0)':''}"
+      ${disabled?'':'onclick="setFormation(''+f+'')"'}
+      title="${title}"
+      style="${disabled?'opacity:.35;cursor:not-allowed;':''}">
+      ${f}
+    </button>`;
+  }).join('');
 }
 
 function getDisplayRunde() {
@@ -1873,17 +1911,40 @@ window.adminTab = function(t, btn) {
 };
 
 window.setFormation = function(f) {
-  currentFormation = f;
+  const rnd = getDisplayRunde();
+
+  // Tjek at den nye formation ikke fjerner låste spillere
   const [def,mid,att] = formations[f];
-  const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  const needed = { MÅL:1, FOR:def, MID:mid, ANG:att };
+  let blocked = false;
+  Object.entries(needed).forEach(([pos, need]) => {
+    const lockedInPos = (lineup[pos]||[]).filter(name => name && isPlayerLocked(name, rnd)).length;
+    if (lockedInPos > need) {
+      alert(`Kan ikke skifte til ${f} – du har ${lockedInPos} låste ${pos.toLowerCase()}-spillere, men formationen kræver kun ${need}.`);
+      blocked = true;
+    }
+  });
+  if (blocked) return;
+
+  currentFormation = f;
+  const counts = needed;
   Object.keys(counts).forEach(pos => {
     const need = counts[pos];
     if(!lineup[pos]) lineup[pos]=[];
-    while(lineup[pos].length < need) {
-      const bench = getBench().find(p=>p.position===pos);
-      lineup[pos].push(bench?.fullName||null);
+    // Behold låste spillere, tilføj fra bænk til resten
+    const locked = lineup[pos].filter(name => name && isPlayerLocked(name, rnd));
+    const unlocked = lineup[pos].filter(name => name && !isPlayerLocked(name, rnd));
+    const newLineup = [...locked];
+    let i = 0;
+    while(newLineup.length < need) {
+      if(i < unlocked.length) {
+        newLineup.push(unlocked[i++]);
+      } else {
+        const bench = getBench().find(p=>p.position===pos);
+        newLineup.push(bench?.fullName||null);
+      }
     }
-    lineup[pos] = lineup[pos].slice(0, need);
+    lineup[pos] = newLineup.slice(0, need);
   });
   renderPitch();
 };
