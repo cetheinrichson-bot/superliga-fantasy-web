@@ -1076,6 +1076,7 @@ const db = getDatabase(app);
 let allPlayers = {};
 let allManagers = {};
 let allRounds = {};
+let allClubKickoffs = {};
 let currentUser = 'Reitzel';
 let posFilter = 'alle';
 let currentFormation = '4-3-3';
@@ -1083,6 +1084,7 @@ let lineup = { MÅL: [], FOR: [], MID: [], ANG: [] };
 let tradeGive = [], tradeGet = [], tradeDrop = [];
 let swapMode = null;
 let playerSort = { col: 'total', dir: -1 };
+let selectedRunde = null; // Den runde der vises i Mit hold
 
 const formations = {
   '4-3-3':[4,3,3],'4-4-2':[4,4,2],'4-5-1':[4,5,1],
@@ -1095,14 +1097,16 @@ const managerColors = { Reitzel:'#3C3489', Thom:'#085041', Heine:'#0C447C', Marl
 
 // ── LOAD DATA ──
 async function loadAll() {
-  const [pSnap, mSnap, rSnap] = await Promise.all([
+  const [pSnap, mSnap, rSnap, ckSnap] = await Promise.all([
     get(ref(db, 'players')),
     get(ref(db, 'managers')),
-    get(ref(db, 'rounds'))
+    get(ref(db, 'rounds')),
+    get(ref(db, 'clubKickoffs'))
   ]);
   allPlayers = pSnap.val() || {};
   allManagers = mSnap.val() || {};
   allRounds = rSnap.val() || {};
+  allClubKickoffs = ckSnap.val() || {};
 
   buildDefaultLineup();
   renderStandings();
@@ -1266,10 +1270,29 @@ function buildDefaultLineup() {
 }
 
 function renderHoldMetrics() {
-  const rnd = activeRound();
-  const squad = mySquad();
-  const total = squad.reduce((s,p) => s+calcTotal(p), 0);
-  const runde = squad.reduce((s,p) => s+(p.roundGrowth?.[rnd]||0), 0);
+  const rnd = getDisplayRunde();
+  const now = new Date();
+  const roundEnd = allRounds[rnd] ? new Date(allRounds[rnd].end) : null;
+  const isHistoric = roundEnd && now > roundEnd;
+
+  // Total vækst – altid fra managerTotal
+  const total = managerTotal(currentUser);
+
+  // Runderesultat – brug snapshot hvis historisk, ellers live
+  let runde = 0;
+  if (isHistoric) {
+    runde = allManagers[currentUser]?.roundScores?.[rnd] || 0;
+  } else {
+    const starters = new Set(allManagers[currentUser]?.lineup?.[rnd]?.starters || []);
+    if (starters.size > 0) {
+      runde = Object.values(allPlayers)
+        .filter(p => starters.has(p.fullName))
+        .reduce((s,p) => s+(p.roundGrowth?.[rnd]||0), 0);
+    } else {
+      runde = mySquad().reduce((s,p) => s+(p.roundGrowth?.[rnd]||0), 0);
+    }
+  }
+
   const managers = Object.keys(allManagers).filter(m=>!allManagers[m].isAdmin);
   const rank = managers.map(m=>managerTotal(m)).sort((a,b)=>b-a).indexOf(total)+1;
   document.getElementById('m-total').textContent = fmtGrowth(total);
@@ -1293,13 +1316,107 @@ function renderRundebar() {
 function selectRunde(key, btn) {
   document.querySelectorAll('.runde-chip').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  selectedRunde = key;
   document.getElementById('hold-runde-label').textContent = allRounds[key]?.label || key;
+  renderPitchForRunde(key);
+  renderTrup();
+  renderHoldMetrics();
 }
 
 function renderFormGrid() {
   document.getElementById('form-grid').innerHTML = Object.keys(formations).map(f => `
     <button class="form-btn ${f===currentFormation?'active':''}" onclick="setFormation('${f}')">${f}</button>`
   ).join('');
+}
+
+function getDisplayRunde() {
+  return selectedRunde || activeRound();
+}
+
+function isRoundLocked(rnd) {
+  if (!allRounds[rnd]) return false;
+  const now = new Date();
+  const end = new Date(allRounds[rnd].end);
+  return now > end;
+}
+
+function isPlayerLocked(playerName, rnd) {
+  const p = allPlayers[playerName] || allPlayers[playerName.replace(/[.#$\/\[\]]/g,'_')];
+  if (!p || !p.club) return false;
+  // Brug club_ prefix som matchede seed_fixtures_v2
+  const key = "club_" + p.club.replace(/[^a-zA-Z0-9æøåÆØÅ]/g, "_");
+  const kickoffStr = allClubKickoffs?.[rnd]?.[key];
+  if (!kickoffStr) return false;
+  return new Date() >= new Date(kickoffStr);
+}
+
+function isRoundActive(rnd) {
+  if (!allRounds[rnd]) return false;
+  const now = new Date();
+  const start = new Date(allRounds[rnd].start);
+  const end = new Date(allRounds[rnd].end);
+  return now >= start && now <= end;
+}
+
+function renderPitchForRunde(rnd) {
+  // Hent gemt opstilling for denne runde
+  const savedLineup = allManagers[currentUser]?.lineup?.[rnd];
+  const starters = savedLineup?.starters || [];
+  const formation = savedLineup?.formation || currentFormation;
+  const now = new Date();
+  const roundEnd = allRounds[rnd] ? new Date(allRounds[rnd].end) : null;
+  const isHistoric = roundEnd && now > roundEnd;
+  const isActive = allRounds[rnd] ? (now >= new Date(allRounds[rnd].start) && now <= roundEnd) : false;
+
+  if (isHistoric && starters.length > 0) {
+    // Historisk runde – vis gemt opstilling, ikke redigerbar
+    const [def,mid,att] = (formations[formation] || formations['4-3-3']);
+    const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
+    let html = `<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-bottom:10px">${formation} · ${allRounds[rnd]?.label}</div>`;
+    const posOrder = ['ANG','MID','FOR','MÅL'];
+    const byPos = { MÅL:[], FOR:[], MID:[], ANG:[] };
+    starters.forEach(name => {
+      const p = allPlayers[name] || allPlayers[name.replace(/[.#$\/\[\]]/g,'_')];
+      if(p && byPos[p.position]) byPos[p.position].push(p);
+    });
+    posOrder.forEach(pos => {
+      const need = counts[pos]||1;
+      const players = byPos[pos].slice(0, need);
+      let row = '';
+      for(let i=0;i<need;i++) {
+        const p = players[i];
+        if(p) {
+          const rpts = p.roundGrowth?.[rnd] || 0;
+          row += `<div class="pslot locked" style="cursor:default">
+            <div class="pts">${fmtGrowth(rpts)}</div>
+            <div class="nm">${p.fullName.split(' ').pop()}</div>
+            <div class="cl">${p.club}</div>
+          </div>`;
+        } else {
+          row += `<div class="pslot empty" style="cursor:default"><div class="ep">–</div></div>`;
+        }
+      }
+      html += `<div class="pitch-row">${row}</div>`;
+    });
+    document.getElementById('pitch').innerHTML = html;
+    document.getElementById('pos-warn').innerHTML = '';
+    // Skjul gem-knap for historiske runder
+    document.querySelector('#hold-opstilling .btn-primary').style.display = isActive ? 'inline-block' : 'none';
+    document.querySelector('#hold-opstilling .btn:not(.btn-primary)').style.display = isActive ? 'inline-block' : 'none';
+    renderBench();
+    return;
+  }
+
+  // Aktiv runde – vis redigerbar opstilling
+  document.querySelector('#hold-opstilling .btn-primary').style.display = 'inline-block';
+  document.querySelector('#hold-opstilling .btn:not(.btn-primary)').style.display = 'inline-block';
+  // Opdater deadline-note
+  const roundStart = allRounds[rnd] ? new Date(allRounds[rnd].start) : null;
+  const noteEl = document.getElementById('deadline-note');
+  if (noteEl && roundStart) {
+    noteEl.textContent = `Spillere låses individuelt når deres kamp starter · Transfervindue lukker ${roundStart.toLocaleDateString('da-DK', {weekday:'long', day:'numeric', month:'short'})} kl. ${roundStart.toLocaleTimeString('da-DK', {hour:'2-digit', minute:'2-digit'})}`;
+  }
+  renderPitch();
 }
 
 function renderPitch() {
@@ -1315,10 +1432,11 @@ function renderPitch() {
       const name = slots[i];
       const p = name ? allPlayers[name] : null;
       if(p) {
-        const rnd = activeRound();
+        const rnd = getDisplayRunde();
         const rpts = p.roundGrowth?.[rnd] || 0;
-        row += `<div class="pslot filled" onclick="openSwap('${pos}',${i})">
-          <div class="pts">${fmtGrowth(rpts)}</div>
+        const locked = isRoundLocked(rnd) || isPlayerLocked(p.fullName, rnd);
+        row += `<div class="pslot ${locked?'locked':'filled'}" onclick="openSwap('${pos}',${i})">
+          ${locked ? `<div class="lk">LÅST</div>` : `<div class="pts">${fmtGrowth(rpts)}</div>`}
           <div class="nm">${p.fullName.split(' ').pop()}</div>
           <div class="cl">${p.club}</div>
         </div>`;
@@ -1348,14 +1466,19 @@ function checkPosWarnings() {
 
 function renderBench() {
   const bench = getBench();
-  document.getElementById('bench').innerHTML = bench.slice(0,5).map(p => `
-    <div class="bench-slot" onclick="openSwapFromBench('${p.fullName}')">
+  const rnd = getDisplayRunde();
+  document.getElementById('bench').innerHTML = bench.slice(0,5).map(p => {
+    const locked = isRoundLocked(rnd) || isPlayerLocked(p.fullName, rnd);
+    return `<div class="bench-slot ${locked?'locked':''}" onclick="${locked?'void(0)':'openSwapFromBench('+JSON.stringify(p.fullName)+')'}">
       <div class="b-name">${p.fullName.split(' ').pop()}</div>
       <div class="b-club">${p.club}</div>
       <div style="margin:3px 0"><span class="pos ${posClass[p.position]}">${p.position}</span></div>
       <div class="b-pts ${calcTotal(p)>=0?'pts-pos':'pts-neg'}">${fmtGrowth(calcTotal(p))}</div>
-    </div>`).join('');
+      ${locked ? '<div class="b-lock">Kamp startet</div>' : ''}
+    </div>`;
+  }).join('');
 }
+
 
 function renderTrup() {
   const squad = mySquad().sort((a,b) => calcTotal(b)-calcTotal(a));
@@ -1371,6 +1494,16 @@ function renderTrup() {
 
 // ── SWAP MODAL ──
 function openSwap(pos, idx) {
+  const rnd = getDisplayRunde();
+  if (isRoundLocked(rnd)) {
+    alert('Denne runde er afsluttet og kan ikke redigeres.');
+    return;
+  }
+  const current = (lineup[pos]||[])[idx];
+  if (current && isPlayerLocked(current, rnd)) {
+    alert('Denne spillers kamp er allerede startet – kan ikke byttes ud.');
+    return;
+  }
   swapMode = { type:'slot', pos, idx };
   const current = (lineup[pos]||[])[idx];
   const starters = new Set(getStarters());
@@ -1391,6 +1524,10 @@ function openSwap(pos, idx) {
 }
 
 function openSwapFromBench(name) {
+  if (isRoundLocked(getDisplayRunde())) {
+    alert('Denne runde er afsluttet og kan ikke redigeres.');
+    return;
+  }
   const p = allPlayers[name];
   const pos = p.position;
   const [def,mid,att] = formations[currentFormation];
@@ -1686,7 +1823,11 @@ async function updateRoundStatus(key, status) {
 }
 
 async function saveLineup() {
-  const rnd = activeRound();
+  const rnd = getDisplayRunde();
+  if (isRoundLocked(rnd)) {
+    alert('Denne runde er afsluttet og kan ikke gemmes.');
+    return;
+  }
   const starters = getStarters();
   await update(ref(db, 'managers/' + currentUser + '/lineup/' + rnd), {
     formation: currentFormation,
@@ -1701,7 +1842,13 @@ window.showPage = function(page, btn) {
   document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   btn.classList.add('active');
-  if(page==='hold') { renderHoldMetrics(); renderPitch(); renderTrup(); }
+  if(page==='hold') {
+    selectedRunde = activeRound();
+    renderHoldMetrics();
+    renderPitchForRunde(selectedRunde);
+    renderTrup();
+    renderRundebar();
+  }
   if(page==='alle-hold') { renderAlleHold(); }
 };
 
@@ -1834,7 +1981,7 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 });
 
 // ── ADMIN PIN ──
-const ADMIN_PIN = '2905'; // Skift dette til din ønskede PIN-kode
+const ADMIN_PIN = '1234'; // Skift dette til din ønskede PIN-kode
 let adminUnlocked = false;
 
 window.checkAdminPin = function(btn) {
