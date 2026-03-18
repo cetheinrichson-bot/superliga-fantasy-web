@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="da">
 <head>
@@ -1142,7 +1141,18 @@ function fmtGrowth(n) {
 }
 
 function activeRound() {
-  return Object.entries(allRounds).find(([,r]) => r.status === 'active')?.[0] || 'r5';
+  const now = new Date();
+  // Find runden vi er inden for baseret på tidspunkter
+  for (const [key, round] of Object.entries(allRounds)) {
+    const start = new Date(round.start);
+    const end   = new Date(round.end);
+    if (now >= start && now <= end) return key;
+  }
+  // Ingen aktiv runde – find den senest afsluttede
+  const done = Object.entries(allRounds)
+    .filter(([,r]) => new Date(r.end) < now)
+    .sort((a,b) => new Date(b[1].end) - new Date(a[1].end));
+  return done[0]?.[0] || 'r5';
 }
 
 function calcTotal(player) {
@@ -1234,8 +1244,16 @@ function renderStandings() {
     </tr>`).join('');
 
   // Opdater badge
+  const now = new Date();
   const ar = allRounds[rnd];
-  if (ar) document.getElementById('active-round-badge').textContent = ar.label + ' · live';
+  if (ar) {
+    const start = new Date(ar.start);
+    const end   = new Date(ar.end);
+    const isLive = now >= start && now <= end;
+    const badge  = document.getElementById('active-round-badge');
+    badge.textContent = isLive ? ar.label + ' · live' : ar.label + ' · afsluttet';
+    badge.className   = isLive ? 'badge badge-live' : 'badge badge-done';
+  }
 }
 
 function renderBars() {
@@ -2051,7 +2069,7 @@ document.querySelectorAll('.modal-bg').forEach(bg => {
 });
 
 // ── ADMIN PIN ──
-const ADMIN_PIN = '2905'; // Skift dette til din ønskede PIN-kode
+const ADMIN_PIN = '1234'; // Skift dette til din ønskede PIN-kode
 let adminUnlocked = false;
 
 window.checkAdminPin = function(btn) {
