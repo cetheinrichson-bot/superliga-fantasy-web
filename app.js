@@ -316,7 +316,7 @@ function renderFormGrid() {
     if (isActive) cls += ' active';
     if (disabled) cls += ' disabled';
     const style = disabled ? 'opacity:.35;cursor:not-allowed;' : '';
-    const onclick = (!disabled) ? ' onclick="setFormation(' + JSON.stringify(f) + ')"' : '';
+    const onclick = (!disabled) ? ' onclick="window.setFormation(' + JSON.stringify(f) + ')"' : '';
     return '<button class="' + cls + '" style="' + style + '"' + onclick + '>' + f + '</button>';
   }).join('');
 }
