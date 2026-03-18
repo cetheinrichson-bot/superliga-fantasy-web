@@ -292,7 +292,7 @@ function renderFormGrid() {
   const rnd = getDisplayRunde();
   const roundLocked = isRoundLocked(rnd);
 
-  // Tæl låste spillere pr position i den aktive opstilling
+  // Tæl låste spillere pr position
   const lockedCounts = { MÅL:0, FOR:0, MID:0, ANG:0 };
   if (!roundLocked) {
     Object.entries(lineup).forEach(([pos, slots]) => {
@@ -311,14 +311,13 @@ function renderFormGrid() {
       needed.ANG < lockedCounts.ANG
     );
     const disabled = roundLocked || invalid;
-    const activeClass = f === currentFormation ? 'active' : '';
-    const disabledClass = disabled ? 'disabled' : '';
-    const clickHandler = disabled ? '' : 'setFormation(' + JSON.stringify(f) + ')';
-    const styleAttr = disabled ? 'opacity:.35;cursor:not-allowed;' : '';
-    return '<button class="form-btn ' + activeClass + ' ' + disabledClass + '"'
-      + (clickHandler ? ' onclick="' + clickHandler + '"' : '')
-      + ' style="' + styleAttr + '">'
-      + f + '</button>';
+    const isActive = f === currentFormation;
+    let cls = 'form-btn';
+    if (isActive) cls += ' active';
+    if (disabled) cls += ' disabled';
+    const style = disabled ? 'opacity:.35;cursor:not-allowed;' : '';
+    const onclick = (!disabled) ? ' onclick="setFormation(' + JSON.stringify(f) + ')"' : '';
+    return '<button class="' + cls + '" style="' + style + '"' + onclick + '>' + f + '</button>';
   }).join('');
 }
 
@@ -352,28 +351,31 @@ function isRoundActive(rnd) {
 }
 
 function renderPitchForRunde(rnd) {
-  // Hent gemt opstilling for denne runde
   const savedLineup = allManagers[currentUser]?.lineup?.[rnd];
   const starters = savedLineup?.starters || [];
-  const formation = savedLineup?.formation || currentFormation;
+  const savedFormation = savedLineup?.formation;
   const now = new Date();
   const roundEnd = allRounds[rnd] ? new Date(allRounds[rnd].end) : null;
   const isHistoric = roundEnd && now > roundEnd;
-  const isActive = allRounds[rnd] ? (now >= new Date(allRounds[rnd].start) && now <= roundEnd) : false;
 
-  if (isHistoric && starters.length > 0) {
-    // Historisk runde – vis gemt opstilling, ikke redigerbar
-    currentFormation = formation; // Sæt korrekt formation så den vises markeret
-    const [def,mid,att] = (formations[formation] || formations['4-3-3']);
+  // Sæt altid currentFormation fra gemt opstilling hvis den findes
+  if (savedFormation && formations[savedFormation]) {
+    currentFormation = savedFormation;
+  }
+
+  if (isHistoric) {
+    // Historisk runde – byg pitch direkte fra starters, ingen redigering
+    const f = currentFormation;
+    const [def,mid,att] = formations[f] || formations['4-3-3'];
     const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
-    let html = `<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-bottom:10px">${formation} · ${allRounds[rnd]?.label}</div>`;
-    const posOrder = ['ANG','MID','FOR','MÅL'];
+    const posOrderH = ['ANG','MID','FOR','MÅL'];
     const byPos = { MÅL:[], FOR:[], MID:[], ANG:[] };
     starters.forEach(name => {
       const p = allPlayers[name] || allPlayers[name.replace(/[.#$\/\[\]]/g,'_')];
       if(p && byPos[p.position]) byPos[p.position].push(p);
     });
-    posOrder.forEach(pos => {
+    let html = '<div style="text-align:center;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.1em;margin-bottom:10px">' + f + ' · ' + (allRounds[rnd]?.label||'') + '</div>';
+    posOrderH.forEach(pos => {
       const need = counts[pos]||1;
       const players = byPos[pos].slice(0, need);
       let row = '';
@@ -381,32 +383,23 @@ function renderPitchForRunde(rnd) {
         const p = players[i];
         if(p) {
           const rpts = p.roundGrowth?.[rnd] || 0;
-          row += `<div class="pslot locked" style="cursor:default">
-            <div class="pts">${fmtGrowth(rpts)}</div>
-            <div class="nm">${p.fullName.split(' ').pop()}</div>
-            <div class="cl">${p.club}</div>
-          </div>`;
+          row += '<div class="pslot locked" style="cursor:default"><div class="pts">' + fmtGrowth(rpts) + '</div><div class="nm">' + p.fullName.split(' ').pop() + '</div><div class="cl">' + p.club + '</div></div>';
         } else {
-          row += `<div class="pslot empty" style="cursor:default"><div class="ep">–</div></div>`;
+          row += '<div class="pslot empty" style="cursor:default"><div class="ep">-</div></div>';
         }
       }
-      html += `<div class="pitch-row">${row}</div>`;
+      html += '<div class="pitch-row">' + row + '</div>';
     });
     document.getElementById('pitch').innerHTML = html;
     document.getElementById('pos-warn').innerHTML = '';
-    // Skjul gem-knap for historiske runder
-    document.querySelector('#hold-opstilling .btn-primary').style.display = isActive ? 'inline-block' : 'none';
-    document.querySelector('#hold-opstilling .btn:not(.btn-primary)').style.display = isActive ? 'inline-block' : 'none';
+    document.querySelector('#hold-opstilling .btn-primary').style.display = 'none';
+    document.querySelector('#hold-opstilling .btn:not(.btn-primary)').style.display = 'none';
+    renderFormGrid();
     renderBench();
     return;
   }
 
-  // Aktiv eller fremtidig runde – vis redigerbar opstilling
-  // Sæt formation fra gemt opstilling hvis den findes
-  if (savedLineup?.formation && formations[savedLineup.formation]) {
-    currentFormation = savedLineup.formation;
-  }
-  // Sæt lineup fra gemt opstilling hvis den findes
+  // Aktiv/fremtidig runde – indlæs gemt lineup og vis redigerbar pitch
   if (starters.length > 0) {
     const [def,mid,att] = formations[currentFormation] || formations['4-3-3'];
     const counts = { MÅL:1, FOR:def, MID:mid, ANG:att };
@@ -422,11 +415,10 @@ function renderPitchForRunde(rnd) {
   }
   document.querySelector('#hold-opstilling .btn-primary').style.display = 'inline-block';
   document.querySelector('#hold-opstilling .btn:not(.btn-primary)').style.display = 'inline-block';
-  // Opdater deadline-note
   const roundStart = allRounds[rnd] ? new Date(allRounds[rnd].start) : null;
   const noteEl = document.getElementById('deadline-note');
   if (noteEl && roundStart) {
-    noteEl.textContent = `Spillere låses individuelt når deres kamp starter · Transfervindue lukker ${roundStart.toLocaleDateString('da-DK', {weekday:'long', day:'numeric', month:'short'})} kl. ${roundStart.toLocaleTimeString('da-DK', {hour:'2-digit', minute:'2-digit'})}`;
+    noteEl.textContent = 'Spillere låses individuelt når deres kamp starter · Transfervindue lukker ' + roundStart.toLocaleDateString('da-DK', {weekday:'long', day:'numeric', month:'short'}) + ' kl. ' + roundStart.toLocaleTimeString('da-DK', {hour:'2-digit', minute:'2-digit'});
   }
   renderPitch();
 }
