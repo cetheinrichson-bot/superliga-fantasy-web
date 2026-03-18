@@ -1341,29 +1341,20 @@ function renderFormGrid() {
   document.getElementById('form-grid').innerHTML = Object.keys(formations).map(f => {
     const [def,mid,att] = formations[f];
     const needed = { MÅL:1, FOR:def, MID:mid, ANG:att };
-
-    // Formation er ugyldig hvis den kræver færre spillere end dem der allerede er låst
     const invalid = !roundLocked && (
       needed.FOR < lockedCounts.FOR ||
       needed.MID < lockedCounts.MID ||
       needed.ANG < lockedCounts.ANG
     );
-
     const disabled = roundLocked || invalid;
-    const title = roundLocked
-      ? 'Runden er afsluttet'
-      : invalid
-        ? `Kan ikke vælge – ${Object.entries(lockedCounts).filter(([p,n])=>n>0&&needed[p]<n).map(([p,n])=>`${n} ${p.toLowerCase()} låst`).join(', ')}`
-        : '';
-
-    return `<button
-      class="form-btn ${f===currentFormation?'active':''} ${disabled?'disabled':''}"
-      onclick="${disabled?'void(0)':''}"
-      ${disabled?'':'onclick="setFormation(''+f+'')"'}
-      title="${title}"
-      style="${disabled?'opacity:.35;cursor:not-allowed;':''}">
-      ${f}
-    </button>`;
+    const activeClass = f === currentFormation ? 'active' : '';
+    const disabledClass = disabled ? 'disabled' : '';
+    const clickHandler = disabled ? '' : 'setFormation(' + JSON.stringify(f) + ')';
+    const styleAttr = disabled ? 'opacity:.35;cursor:not-allowed;' : '';
+    return '<button class="form-btn ' + activeClass + ' ' + disabledClass + '"'
+      + (clickHandler ? ' onclick="' + clickHandler + '"' : '')
+      + ' style="' + styleAttr + '">'
+      + f + '</button>';
   }).join('');
 }
 
