@@ -1158,19 +1158,29 @@ function managerRoundScore(manager, rnd) {
 }
 
 function managerTotal(manager) {
-  // Brug snapshots for afsluttede runder, live data for aktiv runde
+  const now = new Date();
   const rnd = activeRound();
   const roundScores = allManagers[manager]?.roundScores || {};
   let total = 0;
   for (const [key, round] of Object.entries(allRounds)) {
-    if (round.status === 'upcoming') continue;
-    if (key === rnd) {
-      // Aktiv runde: brug live data
-      total += Object.values(allPlayers)
-        .filter(p => p.owner === manager)
-        .reduce((sum, p) => sum + (p.roundGrowth?.[key] || 0), 0);
+    const start = new Date(round.start);
+    const end   = new Date(round.end);
+    if (now < start) continue; // Fremtidig runde – spring over
+    if (now >= start && now <= end) {
+      // Aktiv runde – brug live opstillingsdata
+      const starters = new Set(allManagers[manager]?.lineup?.[key]?.starters || []);
+      if (starters.size > 0) {
+        total += Object.values(allPlayers)
+          .filter(p => starters.has(p.fullName))
+          .reduce((sum, p) => sum + (p.roundGrowth?.[key] || 0), 0);
+      } else {
+        // Ingen gemt opstilling – brug trup som fallback
+        total += Object.values(allPlayers)
+          .filter(p => p.owner === manager)
+          .reduce((sum, p) => sum + (p.roundGrowth?.[key] || 0), 0);
+      }
     } else {
-      // Afsluttet runde: brug snapshot hvis det findes
+      // Afsluttet runde – brug snapshot
       total += roundScores[key] || 0;
     }
   }
